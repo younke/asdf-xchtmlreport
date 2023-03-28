@@ -5,7 +5,6 @@ set -euo pipefail
 GH_REPO="https://github.com/XCTestHTMLReport/XCTestHTMLReport"
 TOOL_NAME="xchtmlreport"
 TOOL_TEST="xchtmlreport -h"
-TOOL_BUILDPATH=".build/apple/Products/Release/xchtmlreport"
 
 fail() {
   echo -e "asdf-$TOOL_NAME: $*"
@@ -14,7 +13,6 @@ fail() {
 
 curl_opts=(-fsSL)
 
-# NOTE: You might want to remove this if xchtmlreport is not hosted on GitHub releases.
 if [ -n "${GITHUB_API_TOKEN:-}" ]; then
   curl_opts=("${curl_opts[@]}" -H "Authorization: token $GITHUB_API_TOKEN")
 fi
@@ -27,13 +25,12 @@ sort_versions() {
 list_github_tags() {
   git ls-remote --tags --refs "$GH_REPO" |
     grep -o 'refs/tags/.*' | cut -d/ -f3- |
-    sed 's/^v//' # NOTE: You might want to adapt this sed to remove non-version strings from tags
+    sed 's/^v//'
 }
 
 list_all_versions() {
-  # TODO: Adapt this. By default we simply list the tag names from GitHub releases.
-  # Change this function if xchtmlreport has other means of determining installable versions.
-  list_github_tags
+  # min. supported version is 2.3.0 for binary installations
+  list_github_tags | awk '$0 >= "2.3.0"'
 }
 
 download_release() {
@@ -41,8 +38,7 @@ download_release() {
   version="$1"
   filename="$2"
 
-  # TODO: Adapt the release URL convention for xchtmlreport
-  url="$GH_REPO/archive/refs/tags/${version}.tar.gz"
+  url="$GH_REPO/releases/download/${version}/${TOOL_NAME}-${version}.zip"
 
   echo "* Downloading $TOOL_NAME release $version..."
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
@@ -61,11 +57,10 @@ install_version() {
     mkdir -p "$install_path"
     cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
     cd "$install_path"
-    swift build --configuration release --arch arm64 --arch x86_64
     if [ ! -d bin ]; then
       mkdir bin >/dev/null 2>&1
     fi
-    cp -f "$TOOL_BUILDPATH" "bin/$TOOL_NAME"
+    mv "release/${TOOL_NAME}" ./bin || fail "Could not move ${TOOL_NAME} to ./bin folder"
 
     local tool_cmd
     tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
