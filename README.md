@@ -7,6 +7,11 @@
 
 </div>
 
+# Supported Versions
+
+Versions above 2.3.0. Installer will use binary executable provided with release.
+**Installation might be broken** if tool maintainer somehow change release assets.
+
 # Contents
 
 - [Dependencies](#dependencies)
@@ -17,8 +22,7 @@
 
 # Dependencies
 
-- `bash`, `curl`, `tar`: generic POSIX utilities.
-- swift 5.5+ toolchain as required by [XCTestHTMLReport](https://swiftpackageindex.com/XCTestHTMLReport/XCTestHTMLReport)
+- `bash`, `curl`, `unzip`
 
 # Install
 
